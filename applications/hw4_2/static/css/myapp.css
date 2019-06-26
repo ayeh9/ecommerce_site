@@ -1,0 +1,82 @@
+/* line 1, ../sass/_main.scss */
+.colorful {
+  color: #bb8833;
+}
+
+/* line 5, ../sass/_main.scss */
+div.main_content {
+  padding: 16px;
+}
+/* line 8, ../sass/_main.scss */
+div.main_content div.form_row {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+/* line 13, ../sass/_main.scss */
+div.main_content div.review_div {
+  width: calc(100%  / 2);
+  margin: 5px auto;
+  border: 1px black solid;
+  background-color: #ECE2E0;
+  padding: 4px;
+}
+/* line 18, ../sass/_main.scss */
+div.main_content div.review_div .review_title {
+  font-size: 120%;
+  margin: 5px auto;
+  text-decoration: underline;
+  margin: auto;
+}
+div.product_title {
+  font-size: 150%;
+  margin: 5px auto;
+  text-decoration: underline;
+  margin: auto;
+}
+
+.collapsible {
+  background-color: #ECE2E0;
+  color: #444;
+  cursor: pointer;
+  padding: 2px;
+  margin-left:75%;
+  width: 25%;
+  border: none;
+  text-align: left;
+  font-size: 20px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
+}
+
+input[type=text] {
+  width: 100%;
+  padding: 0px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: black;
+  background-color: rgb(119, 202, 172);
+  color: black;
+}
+
+body {
+  background-image: url("nyan.jpg");
+}
+
+div.transbox {
+  margin: 30px;
+  background-color: #ffffff;
+  border: 1px solid black;
+  opacity: 0.6;
+  filter: alpha(opacity=60); /* For IE8 and earlier */
+}

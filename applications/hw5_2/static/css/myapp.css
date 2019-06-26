@@ -1,0 +1,36 @@
+/* line 1, ../sass/_main.scss */
+.colorful {
+  color: #bb8833;
+}
+
+.product_div, .cart_div {
+  border: 2px solid black;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding-left: 10px;
+}
+
+.user_review {
+  border: 2px solid black;
+  border-radius: 5px;
+  margin: 5px;
+  background-color: lightslategray;
+}
+
+#vue-div {
+  margin: 10px;
+}
+
+#product_list {
+  background-color: lightgray;
+}
+
+#search_bar {
+  border: 2px solid black;
+  margin-top: 5px;
+  padding-left: 10px;
+}
+
+#check-mark {
+  color: green;
+}

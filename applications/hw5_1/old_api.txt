@@ -1,0 +1,81 @@
+@auth.requires_signature()
+def add_review():
+    review_id = db.user_review.insert(
+        product_id=request.vars.product_id,
+        review=request.vars.review,
+        user_email=auth.user.email
+    )
+    # print(review_id)
+    # response.flash = T("Hello World")
+    # We return the id of the new review, so we can insert it along all the others.
+    return response.json(dict(review_id=review_id))
+
+def get_product_list():
+    results = []
+    if auth.user is None:
+        # Not logged in.
+        rows = db().select(db.products.ALL, orderby=~db.products.time_posted)
+        for row in rows:
+            results.append(dict(
+                id=row.id,
+                product_name=row.name,
+                product_description=row.description,
+                product_sales_price=row.sales_price,
+                rating = True, # Anyway not used as the user is not logged in.
+                review = None # As above
+            ))
+    else:
+        # Logged in. db.user_review.ALL,
+        #                     left=[
+        #                         db.user_review.on((db.user_review.product_id == db.products.id) & (db.user_review.user_email == auth.user.email)),
+        rows = db().select(db.products.ALL,
+        # db.user_star.ALL,
+        # left=[db.user_star.on(db.user_star.product_id == db.products.id)],
+        # left=[db.user_star.on((db.user_star.product_id == db.products.id) & (db.user_star.user_email == auth.user.email))],
+        orderby=~db.products.time_posted)
+        for row in rows:
+            results.append(dict(
+                id=row.id,
+                product_name=row.name,
+                product_description=row.description,
+                product_sales_price=row.sales_price,
+                rating = True,
+                # None if row.user_review.id is None else row.user_star.rating,
+                review = False if row.user_review.id is None else True # As above
+            ))
+    # For homogeneity, we always return a dictionary.
+    return response.json(dict(product_list=results))
+
+def get_reviewers():
+    """Gets the list of people who reviewed a product."""
+    product_id = int(request.vars.product_id)
+    # We get directly the list of all the users who liked the post.
+    rows = db(db.user_review.product_id == product_id).select(db.user_review.user_email)
+    rows2 = db(db.user_review.product_id == product_id).select(db.user_review.review)
+    # If the user is logged in, we remove the user from the set.
+    # reviewers_list = [[r.user_email for r in rows], [r2.review for r2 in rows2]]
+    # reviewers_list.sort()
+    reviewers_list = [r.user_email for r in rows]
+    reviews_list = [r2.review for r2 in rows2]
+    # https://stackoverflow.com/questions/3678869/pythonic-way-to-combine-two-lists-in-an-alternating-fashion
+    main_list = [None] * (len(reviewers_list) + len(reviews_list))
+    main_list[1::2] = reviews_list
+    main_list[::2] = reviewers_list
+    # print(reviewers_list)
+    # print(reviews_list)
+    # print(main_list)
+    # print(reviewers_list)
+    return response.json(dict(reviewers=reviewers_list, reviews=reviews_list))
+
+@auth.requires_signature(hash_vars=False)
+def set_stars():
+    """Sets the star rating of a post."""
+    product_id = int(request.vars.product_id)
+    rating = int(request.vars.rating)
+    db.user_star.update_or_insert(
+        (db.user_star.product_id == product_id) & (db.user_star.user_email == auth.user.email),
+        product_id = product_id,
+        user_email = auth.user.email,
+        rating = rating
+    )
+    return "ok" # Might be useful in debugging.

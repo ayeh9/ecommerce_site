@@ -1,0 +1,123 @@
+<!-- https://jsfiddle.net/Lq3vr3b8/13/ -->
+<!-- http://web2py.com/books/default/chapter/32/06/the-database-abstraction-layer#select -->
+<!-- https://stackoverflow.com/questions/6667201/how-to-define-a-two-dimensional-array-in-python -->
+
+
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+    var add_review_url = "{{=URL('api', 'add_review', user_signature=True)}}";
+    var get_product_list_url = "{{=URL('api', 'get_product_list')}}";
+    var get_reviewers_url = "{{=URL('api', 'get_reviewers')}}"
+    var set_stars_url = "{{=URL('api', 'set_stars', user_signature=True, hash_vars=False)}}";
+    var is_logged_in = {{='false' if auth.user is None else 'true'}};
+</script>
+{{end}}
+
+<div class="main_content">
+    <div id="vue-div" class="display:none">
+      <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
+      <div v-if="product_list.length === 0">There are no products.</div>
+
+      <div id="product_list">
+      <div class="product_div" v-for="product in product_list">
+        <div class="container">
+          <div class="compressible">
+          <br>
+          <div class="product-block">
+            <div class="product_name"><b>${product.product_name} &nbsp $${product.product_sales_price}</b></div>
+            <div class="product_description">${product.product_description}</div>
+
+            <!-- <div class="attributes"> -->
+
+            <!-- Code for reviews. -->
+            <div class="reviewers">
+              <span class="show_reviewers"
+                    v-on:click="!show_reviewers(product._idx)">
+                <span v-if="is_logged_in" class="toggle_review"
+                      v-on:click="review_click(product._idx)">
+                  <b v-if="product._show" class="btn">Close</b>
+                  <b v-if="!product._show" class="btn">Reviews</b>
+                </span>
+              </span>
+              <div class="container">
+                <span v-if="product._show_reviewers">
+                  <div class="container">
+                    <div class="star_rating">
+                      <span v-on:mouseout="stars_out(product._idx)"> Your Rating:
+                        <span v-on:mouseover="stars_over(product._idx, idx)"
+                              v-on:click="set_stars(product._idx, idx)"
+                              v-for="idx in star_indices">
+                            <i v-if="idx <= product._num_stars_display" class="fa fa-star" style="color:gold"></i>
+                            <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                        </span>
+                      </span>
+                    </div>
+                    <div class="form">
+                      <!-- <textarea name="review" rows="8" cols="80" placeholder="Enter a review"></textarea> -->
+                      <input v-model="form_review" placeholder="Enter a review"> </input>
+                      <!-- <input v-model="form_email" placeholder="Enter email"> </input> -->
+                    </div>
+                    <!-- <div class="form">
+                      <input v-model="form_email" placeholder="Enter email"/>
+                    </div> -->
+                  </div>
+                  <div class="container"><div class="quarter"></div>
+                      <div class="submit">
+                        <span v-on:click="add_review(product._idx)">
+                          <b class="btn">Submit</b>
+                          </span>
+                        <!-- <button id="add-review" v-on:click="add_review">Submit</button> -->
+                      </div>
+                  </div>
+                  <span v-if="product._show_reviewers">
+                    <span v-for="(reviewer, index) in product._reviewers">
+                      <div class="review-block">
+                        ${product._reviews[index]}<br></br>
+                        <p style="text-align:right; margin-bottom:-5%; margin-right:3%;">
+                          ${reviewer}
+                          </p>
+                      <!-- <span v-for="review in product._reviews">
+                        ${reviewer} <br> ${review} -->
+                    <!-- <span v-for="index in product._reviewers" :key="index">
+                      ${product._reviewers[index]} <br> ${product._reviews[index]} -->
+                    <!-- <span v-for="index in 2" :key="index"> -->
+                      <!-- <span v-for="review in reviewer"> -->
+                        <!-- <br></br>
+                        ${reviewer}
+                        <br></br> -->
+                      <!-- </span> -->
+                  </div>
+                </div>
+              </div>
+
+
+            <!-- </div> -->
+
+            <!-- Code for start ratings. -->
+            <div class="star_rating">
+              <span v-if="!product._show_reviewers">
+              <span v-on:mouseout="stars_out(product._idx)">
+                <span v-on:mouseover="stars_over(product._idx, idx)"
+                      v-on:click="set_stars(product._idx, idx)"
+                      v-for="idx in star_indices">
+                    <i v-if="idx <= product._num_stars_display" class="fa fa-star" style="color:gold"></i>
+                    <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                </span>
+              </span>
+            </div>
+
+
+          </div>
+        </div>
+        </div>
+      </div>
+      </div>
+
+    </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>

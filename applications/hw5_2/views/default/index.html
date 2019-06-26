@@ -1,0 +1,172 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+    var get_product_list_url = "{{=URL('api', 'get_product_list')}}";
+    var get_review_list_url = "{{=URL('api', 'get_review_list')}}";
+    var get_user_email_url = "{{=URL('api', 'get_user_email')}}";
+    var add_review_url = "{{=URL('api', 'add_review', user_signature=True, hash_vars=False)}}";
+    var set_stars_url = "{{=URL('api', 'set_stars', user_signature=True, hash_vars=False)}}";
+    var search_url = "{{=URL('api', 'search', user_signature=True, hash_vars=False)}}";
+    var is_logged_in = {{='false' if auth.user is None else 'true'}};
+    var add_to_cart_url = "{{=URL('api', 'add_to_cart', user_signature=True, hash_vars=False)}}";
+    var get_cart_url = "{{=URL('api', 'get_cart_list', user_signature=True, hash_vars=False)}}";
+    var delete_cart_url = "{{=URL('api', 'delete_cart_list', user_signature=True, hash_vars=False)}}";
+</script>
+{{end}}
+
+<div class="main_content">
+  <div id="vue-div" class="display:none">
+
+    <!-- Search Bar -->
+    <div v-if="store_page">
+      <div id="search_bar" v-if="is_logged_in">
+        <span>Search</span>
+        <input type="text" v-model="search_string" required
+          v-on:input="do_search">
+      </div>
+    </div>
+
+    <div>
+      <div>
+          <span v-if="store_page">
+              <h3>Store Page</h3>
+              <button class="btn" v-on:click="go_to_cart()" v-if="is_logged_in">
+                  <i class="fa fa-lg fa-shopping-cart"></i>
+              </button>
+          </span>
+          <span v-if="shopping_cart">
+              <h3>Shopping Cart</h3>
+              <button class="btn" v-on:click="go_to_store()"> Continue shopping </button>
+          </span>
+      </div>
+    </div>
+
+    <!-- Message in case there are no products. -->
+    <div v-if="product_list.length === 0">There are no products.</div>
+
+    <!-- Start of product List -->
+    <div id="product_list" v-if="store_page">
+      
+        <!-- Looping through items in product list -->
+        <div class="product_div" v-for="product in product_list">
+          <!-- Displays each product name, price, description -->
+          <h5>${product.product_name}  $${product.product_price}</h5>
+          
+          <p>${product.product_desc}</p>
+
+          <span class="buy_buttons" v-if="is_logged_in">
+            <button class="btn" v-on:click="inc_desired_quantity(product._idx, 1)"><i class="fa fa-plus"></i></button>
+            <span class="desired_quantity">${product.desired_quantity}</span>
+            <button class="btn" v-on:click="inc_desired_quantity(product._idx, -1)"><i class="fa fa-minus"></i></button>
+            <button class="btn red" v-on:click="buy_product(product._idx)"><i class="fa fa-lg fa-shopping-cart"></i> Buy</button>
+            <i id="check-mark" v-if="product.buy_checkmark" class="fa fa-check" aria-hidden="true"></i>
+          </span>
+
+          <!-- When the review section is closed -->
+          <div id="review_section_closed" v-if="product._review_section_closed">
+            <div>Avg rating:</div>
+            <span v-for="idx in star_indices">
+              <i v-if="idx <= product._num_stars_avg_display" class="fa fa-star"></i>
+              <i v-if="idx > product._num_stars_avg_display" class="fa fa-star-o"></i>
+            </span>
+            
+            <button v-on:click="open_reviews(product._idx)">
+              Reviews
+            </button>
+          </div>
+          
+          <!-- When the review section is opened -->
+          <div id="review_section_opened" v-if="product._review_section_opened">
+
+            <!-- Start of user review div -->
+            <div class="user_review">
+              <!-- Code for star ratings. -->
+              <div v-if="is_logged_in" class="star_rating">
+                  <div>Your rating:</div>
+                <span v-on:mouseout="stars_out(product._idx)">
+                  <span v-on:mouseover="stars_over(product._idx, idx)"
+                        v-on:click="set_stars(product._idx, idx)"
+                        v-for="idx in star_indices">
+                    <i v-if="idx <= product._num_stars_display" class="fa fa-star"></i>
+                    <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                  </span>
+                </span>
+              </div>
+
+              <!-- Form for review. -->
+              <div v-if="is_logged_in" id="add_review">
+                <div>
+                  Your review:
+                </div>
+                
+                <div class="submit">
+                  <div v-if="review_content_empty" style="color: red">Review form cannot be empty.</div>
+                  <textarea v-model="review_content" placeholder="Enter your review." required>
+                    
+                  </textarea>
+                  <button id="add-review" v-on:click="add_review(product._idx)">Submit</button>
+                  <i id="check-mark" v-if="submit_checkmark" class="fa fa-check" aria-hidden="true"></i>
+                </div>
+              </div>
+            </div>
+            <!-- End of user review div -->
+
+            <!-- Reviews -->
+            <div v-for="review in review_list" class="user_review">
+              <span v-for="idx in star_indices">
+                <i v-if="idx <= review.star_rating" class="fa fa-star"></i>
+                <i v-if="idx > review.star_rating" class="fa fa-star-o"></i>
+              </span>
+              <div>Review: ${review.review_content}</div>
+              <div>User: ${review.user_name}</div>
+            </div>
+
+            <button v-on:click="close_reviews(product._idx)">
+              Close Reviews
+            </button>
+          </div>
+          
+        </div>
+        <!-- End looping through items in product list -->
+    </div>
+    <!-- End of product List -->
+
+    <!-- Start of shopping cart list -->
+    <div v-if="shopping_cart">
+      <!-- Looping through items in cart list -->
+      <div class="cart_div" v-for="product in cart_list">
+        <h5>${product.product_name}  $${product.product_price}</h5>
+        <p>${product.product_desc}</p>
+
+        <span class="buy_buttons" v-if="is_logged_in">
+          <button class="btn" v-on:click="inc_cart_quantity(product._idx, 1)"><i class="fa fa-plus"></i></button>
+          <span class="desired_quantity">${product.cart_quantity}</span>
+          <button class="btn" v-on:click="inc_cart_quantity(product._idx, -1)"><i class="fa fa-minus"></i></button>
+        </span>
+        <div>Total: $${product._total_price}</div>
+        
+      </div>
+      <h5>Cart Total: $${cart_total}</h5>
+      <a class="btn blue" href="#popup1" v-on:click="pay()"><i class="fa fa-lg fa-credit-card"></i> Pay</a>
+
+      <div class="modal" id="popup1">
+        <div class="twothirds rounded white padded">
+          <h2>Thank you for your order of $${cart_total}</h2>
+          <a class="close" href="#" v-on:click="go_to_cart()">×</a>
+          <div class="right">
+            <a class="close btn" href="#" v-on:click="go_to_cart()">close</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- End of shopping cart list -->
+    
+  </div>
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>
+
+

@@ -1,0 +1,95 @@
+{{extend 'layout.html'}}
+
+<link rel="stylesheet" type="text/css" href="{{ = URL('static/css', 'app.css') }}" />
+<script src="{{ = URL('static','js/vue.min.js') }}"></script>
+
+<script>
+  let getLoggedInUserUrl = "{{ = URL('api', 'get_logged_in_user') }}";
+  let getAllProductsUrl = "{{ = URL('api', 'get_all_products') }}";
+  let getYourReviewUrl = "{{ = URL('api', 'get_your_review') }}";
+  let getYourStarUrl = "{{ = URL('api', 'get_your_star') }}";
+  let saveReviewUrl = "{{ = URL('api', 'save_review') }}";
+  let saveStarUrl = "{{ = URL('api', 'save_star') }}";
+  let getOtherReviewsUrl = "{{ = URL('api', 'get_other_reviews') }}";
+  let getOtherStarsUrl = "{{ = URL('api', 'get_other_stars') }}";
+  let set_stars_url = "{{=URL('api', 'set_stars', user_signature=True, hash_vars=False)}}";
+</script>
+
+<div id="app">
+  <div class="all-products">
+    <div v-for="product in products">
+      <div v-if="!product.isHidden" class="product-container">
+        <div class="product-name">${ product.product_name }</div>
+        <div class="product-price">$ ${ product.product_price }</div>
+        <div class="product-desc">${ product.product_desc }</div>
+        <div>
+          <button v-on:click="getYourReview(product.index); getYourStar(product.index); getOtherReviews(product.index); getOtherStars(product.index); toggleReviewsSection(product.index);"
+            class="reviews-button">Reviews
+            <span>
+              <span
+                    v-on:click="stars_init(product.index)"
+                    v-for="index in star_indices">
+                  <i v-if="index <= 5" class="fa fa-star"></i>
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <!-- Code for start ratings. -->
+        <div v-if="loggedInUser">
+          <div v-if="product.showReviews" class="star-rating">
+            <span>
+              <span v-on:mouseover="stars_over(product.index, index)"
+                    v-on:click="set_stars(product.index, index)"
+                    v-for="index in star_indices">
+                  <i v-if="index <= product._num_stars_display" class="fa fa-star"></i>
+                  <i v-if="index > product._num_stars_display" class="fa fa-star-o"></i>
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div v-if="product.showReviews">
+          <div v-if="loggedInUser">
+            <div class="your-review-title">Your Review:
+            </div>
+            <textarea v-model="product.yourReview.body" class="review-body"></textarea>
+            <div class="move-right">
+              <button v-if="!product.yourReview.hasBeenSaved" v-on:click="saveReview(product.index); saveStar(product.index);"
+                class="save-button">Save</button>
+              <button v-if="product.yourReview.hasBeenSaved" class="save-button">
+                Save
+                <i class="fa fa-check"></i>
+              </button>
+            </div>
+          </div>
+
+
+          <div class="other-reviews">
+            <div class="other-review-title"></div>
+            <div v-for="review in product.otherReviews" class="other-review">
+              <div class="other-review-name">${ review.name }:</div>
+              <div class="other-review-body">${ review.body }</div>
+              <!-- <div v-if="!loggedInUser"> -->
+                <div v-for="user_star in product.otherStars">
+                    <div v-if="review.email == user_star.email">
+                    <span v-for="index in star_indices">
+                        <i v-if="index <= user_star.rating" class="fa fa-star"></i>
+                        <i v-if="index > user_star.rating" class="fa fa-star-o"></i>
+                    </span>
+                  </div>
+                </div>
+              <!-- </div> -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="{{ = URL('static/js', 'index.js') }}"></script>

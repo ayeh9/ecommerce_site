@@ -1,0 +1,108 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+    function openList() {
+      var x = document.getElementById("list_o_reviews");
+      if (x.style.display === "none") {
+        x.style.display = "block";
+      } else {
+        x.style.display = "none";
+      }
+    }
+    function showDiv(){
+      var z = document.getElementById('welcomeDiv')
+      if (z.style.display === "none"){
+        z.style.display = "block";
+      } else {
+        z.style.display = "none";
+      }
+    }
+    var add_review_url = "{{=URL('api', 'add_review')}}";
+    var get_product_list_url = "{{=URL('api', 'get_product_list')}}";
+    var get_review_list_url = "{{=URL('api', 'get_reviews')}}";
+    var set_stars_url = "{{=URL('api', 'set_stars', user_signature=True, hash_vars=False)}}";
+    var is_logged_in = {{='false' if auth.user is None else 'true'}};
+    var search_url = "{{=URL('api', 'search', user_signature=True, hash_vars=False)}}";
+</script>
+{{end}}
+
+<div class="main_content">
+   <div id="vue-div" class="display:none">
+
+      <!-- Message in case there are no products. -->
+      <div v-if="product_list.length === 0">There are no products.</div>
+
+      <!-- We display the product. -->
+      <div class="container">
+         <div id="product_list">
+            <input type="text" v-model="search_string" v-on:input="do_search" placeholder="Search Bar">
+            <div class="review_div" v-for="product in product_list">
+               <div class="product_title">${product.product_title}</div>
+               <div class="review_content">$${product.product_price}</div>
+               <div class="review_content">${product.product_content}</div>
+
+               <!-- display the average star rating-->
+               <div v-if="is_logged_in" class="star_rating">
+                  <span v-on:mouseout="stars_out(product._idx)">
+                  <span v-for="idx in star_indices">
+                  <i v-if="idx <= product._num_stars_display" class="fa fa-star"></i>
+                  <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                  </span>
+                  </span>
+               </div>
+               <button onclick="openList()" class=collapsible>View/Close Reviews</button>
+               <div id="list_o_reviews" style="display:none" >
+                <div v-if="review_list.length === 0">There are no reviews.</div>
+                <div v-for="review in review_list" style="margin:2px; border:1px; border-style:solid; border-color:#231234;">
+                    <div>Rating: ${review.average_rating}/5</div>
+                    <div>Comments: ${review.review_desc}</div>
+                    <div>User: ${review.user_email}</div>
+                </div>
+              </div>
+               <div class="attributes">
+                  <!-- Code for reviews. -->
+                  <div v-if="is_logged_in" id="add_review">
+                    <div class="review_title"><u>Submit Your Own Review</u></div>
+                    <div class="container form_row">
+                        <div class="quarter">Your Review:</div>
+                        <div class="threequarters"></div>
+                        <!-- review star rating-->
+                        <div v-if="is_logged_in" class="star_rating" > 
+                          <span v-on:mouseout="stars_out(product._idx)">
+                          <span v-on:mouseover="stars_over(product._idx, idx)"
+                              v-on:click="set_stars(product._idx, idx)"
+                              v-for="idx in star_indices">
+                          <i v-if="idx <= product._num_stars_display" class="fa fa-star" v-model="form_average" id="form_average"></i>
+                          <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                          </span>
+                          </span>
+                        </div>
+                    </div>
+
+                    <!-- review content submission-->
+                    <div class="container form_row">
+                      <div class="form half">
+                          <textarea v-model="form_desc" id="form_desc" placeholder="Enter the content of your review"></textarea>
+                      </div>
+                    </div>
+
+                    <!-- submit button -->
+                    <div class="container form_row">
+                      <div class="half">
+                          <div class="submit">
+                            <button id="add-review" v-on:click="add_review" onclick="showDiv()">Save</button>
+                          </div>
+                          <div id="welcomeDiv"  style="display:none;" class="answer_list" > &#x2705 </div>
+                      </div>
+                    </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+</div>
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>

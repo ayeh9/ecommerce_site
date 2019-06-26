@@ -1,0 +1,196 @@
+// This is the js for the default/index.html view.
+
+var app = function() {
+
+    var self = {};
+
+    Vue.config.silent = false; // show all warnings
+
+    // Extends an array
+    self.extend = function(a, b) {
+        for (var i = 0; i < b.length; i++) {
+            a.push(b[i]);
+        }
+    };
+
+    // Enumerates an array.
+    var enumerate = function(v) { var k=0; return v.map(function(e) {e._idx = k++;});};
+
+
+    self.add_review = function (product_idx, id) {
+    // We disable the button, to prevent double submission.
+        $.web2py.disableElement($("#add-review"));
+        var sent_review = self.vue.form_review; // Makes a copy
+        // var sent_email = self.vue.form_email;
+        $.post(add_review_url,
+            // Data we are sending.
+            {
+                product_id: id,
+                review: self.vue.form_review,
+            },
+            // What do we do when the post succeeds?
+            function (data) {
+                // Re-enable the button.
+                $.web2py.enableElement($("#add-review"));
+                // Clears the form.
+                // self.vue.form_review = "";
+                // Adds the review to the list of posts.
+                // var new_review = {
+                //     product_id: data.product_id,
+                //     review: sent_review
+                // };
+                // self.vue.product_list[product_idx]._reviewers.unshift(p_id);
+
+                // self.vue.product_list[product_idx]._reviewers.append(email);
+                // self.vue.product_list[product_idx]._reviews.append(sent_review);
+                // We re-enumerate the array.
+                // self.process_products();
+            });
+            // print(sent_review)
+        // If you put code here, it is run BEFORE the call comes back.
+    };
+
+    self.get_products = function() {
+      $.getJSON(get_product_list_url,
+          function(data) {
+              // I am assuming here that the server gives me a nice list
+              // of products, all ready for display.
+              self.vue.product_list = data.product_list;
+              // Post-processing.
+              self.process_products();
+          }
+      );
+    };
+
+    self.process_products = function() {
+        // This function is used to post-process posts, after the list has been modified
+        // or after we have gotten new posts.
+        // We add the _idx attribute to the posts.
+        enumerate(self.vue.product_list);
+        // We initialize the smile status to match the like.
+        self.vue.product_list.map(function (e) {
+            // I need to use Vue.set here, because I am adding a new watched attribute
+            // to an object.  See https://vuejs.org/v2/guide/list.html#Object-Change-Detection-Caveats
+            Vue.set(e, '_show', !e.review);
+            // Who reviewed it?
+            Vue.set(e, '_reviewers', []);
+            Vue.set(e, '_reviews', []);
+            // Number of stars to display.
+            Vue.set(e, '_num_stars_display', e.rating);
+            Vue.set(e, '_details', false);
+        });
+    };
+
+    // Code for getting and displaying the list of likers.
+    self.show_reviewers = function(product_idx) {
+        var p = self.vue.product_list[product_idx];
+        // p._show_reviewers = true;
+        if (!p._reviewers_known) {
+            $.getJSON(get_reviewers_url, {product_id: p.id}, function (data) {
+                p._reviewers = data.reviewers
+                p._reviews = data.reviews
+                p._reviewers_known = true;
+            })
+        }
+    };
+
+    // self.hide_reviewers = function(product_idx) {
+    //     // var p = self.vue.product_list[product_idx];
+    //     // p._show_reviewers = false;
+    // };
+
+    self.review_click = function (product_idx) {
+      var p = self.vue.product_list[product_idx];
+      var p_list = self.vue.product_list;
+      if (!p._show_reviewers){
+        for (var i = 0; i < p_list.length; i++){
+            p_list[i]._show_reviewers = false;
+            p_list[i]._show = false;
+        }
+        p._show_reviewers = true;
+        p._show = true;
+      } else {
+        for (var i = 0; i < p_list.length; i++){
+            p_list[i]._show_reviewers = true;
+            p_list[i]._show = true;
+        }
+        p._show_reviewers = false;
+        p._show = false;
+      }
+      // if (p._details){
+      //   // p._details = false;
+      //   for (var i = 0; i++; i < self.vue.product_list.length){
+      //     self.vue.product_list[i]._show = false;
+      //   }
+      //   // p._show_reviewers = true;
+      // } else {
+      //   // p._details = true;
+      //   for (var i = 0; i++; i < self.vue.product_list.length){
+      //     self.vue.product_list[i]._show = true;
+      //   }
+      //   // p._show_reviewers = false;
+      // }
+      // p._show = !p.review;
+      // p.review = !p._show;
+    };
+
+    // Code for star ratings.
+    self.stars_out = function (product_idx) {
+        // Out of the star rating; set number of visible back to rating.
+        var p = self.vue.product_list[product_idx];
+        p._num_stars_display = p.rating;
+    };
+
+    self.stars_over = function(product_idx, star_idx) {
+        // Hovering over a star; we show that as the number of active stars.
+        var p = self.vue.product_list[product_idx];
+        p._num_stars_display = star_idx;
+    };
+
+    self.set_stars = function(product_idx, star_idx) {
+        // The user has set this as the number of stars for the product.
+        var p = self.vue.product_list[product_idx];
+        p.rating = star_idx;
+        // Sends the rating to the server.
+        $.product(set_stars_url, {
+            product_id: p.id,
+            rating: star_idx
+        });
+    };
+
+    // Complete as needed.
+    self.vue = new Vue({
+        el: "#vue-div",
+        delimiters: ['${', '}'],
+        unsafeDelimiters: ['!{', '}'],
+        data: {
+          form_review: "",
+          product_list: [],
+          star_indices: [1, 2, 3, 4, 5]
+        },
+        methods: {
+        add_review: self.add_review,
+        review_click: self.review_click,
+        show_reviewers: self.show_reviewers,
+        stars_out: self.stars_out,
+        stars_over: self.stars_over,
+        set_stars: self.set_stars
+        }
+    });
+
+    // If we are logged in, shows the form to add posts.
+    // if (is_logged_in) {
+    //     $("#add_post").show();
+    // }
+    // Gets the posts.
+    self.get_products();
+    $("#vue-div").show();
+
+    return self;
+};
+
+var APP = null;
+
+// This will make everything accessible from the js console;
+// for instance, self.x above would be accessible as APP.x
+jQuery(function(){APP = app();});

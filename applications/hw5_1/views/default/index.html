@@ -1,0 +1,210 @@
+<!-- https://jsfiddle.net/Lq3vr3b8/13/ -->
+<!-- http://web2py.com/books/default/chapter/32/06/the-database-abstraction-layer#select -->
+<!-- https://stackoverflow.com/questions/6667201/how-to-define-a-two-dimensional-array-in-python -->
+<!-- https://www.w3schools.com/tags/att_p_align.asp -->
+<!-- https://stackoverflow.com/questions/44228685/position-text-to-stay-in-bottom-right-corner -->
+<!-- https://forum.vuejs.org/t/v-for-access-2-or-more-arrays-in-same-level/5224 -->
+<!-- https://www.w3schools.com/jsref/jsref_unshift.asp -->
+<!-- https://stackoverflow.com/questions/53680628/vue-js-how-to-have-multiple-inputs-in-a-component -->
+<!-- https://vuejs.org/v2/guide/forms.html -->
+<!-- https://www.w3schools.com/js/js_loop_for.asp -->
+<!-- https://pynative.com/python-program-to-calculate-sum-and-average-of-numbers/ -->
+<!-- https://www.digitalocean.com/community/tutorials/how-to-convert-data-types-in-python-3 -->
+<!-- https://stackoverflow.com/questions/10359907/array-sum-and-average -->
+<!-- https://www.w3schools.com/tags/att_textarea_required.asp -->
+
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+    var add_review_url = "{{=URL('api', 'add_review', user_signature=True)}}";
+    var get_product_list_url = "{{=URL('api', 'get_product_list')}}";
+    var get_reviewers_url = "{{=URL('api', 'get_reviewers')}}";
+    var set_stars_url = "{{=URL('api', 'set_stars', user_signature=True)}}";
+    var search_url = "{{=URL('api', 'search')}}";
+    var inc_cart_url = "{{=URL('api', 'inc_cart', user_signature=True, hash_vars=False)}}";
+    var get_cart_url = "{{=URL('api', 'get_cart', user_signature=True, hash_vars=False)}}";
+    var clear_cart_url = "{{=URL('api', 'clear_cart', user_signature=True, hash_vars=False)}}";
+    var is_logged_in = {{='false' if auth.user is None else 'true'}};
+</script>
+{{end}}
+
+<div class="main_content">
+    <div id="vue-div" class="display:none">
+      <span v-if="is_logged_in">
+        <!-- toggle between shop and cart -->
+        <span v-if="page=='cart'">
+          <div class="center">
+            <br></br>
+            <a class="btn rounded" v-on:click="change_page">Continue Shopping</a><br></br>
+            <!-- optional button to clear cart without ordering -->
+            <a class="btn rounded" v-on:click="clear_cart" href="{{'default', 'index'}}">Clear Cart</a>
+          </div>
+          <!-- the user's cart -->
+          <h4 class="cart-text center">Your Order</h4>
+          <span v-for="item in cart_list">
+            <div class="cart-block rounded">
+              <b>${item.product_name}</b><br></br>
+              $${item.product_price}<br></br>
+              Quantity: <br>
+              ${item.amount}<br></br>
+            </div>
+            <br></br>
+          </span>
+          <h4 class="cart-text center">Total: $${total}</h4>
+          <!-- got modal code from: http://mdipierro.github.io/stupid.css/index.html -->
+          <!-- button that clears cart and jumps to modal -->
+          <div class="center">
+            <a class="btn rounded" v-on:click="clear_cart" href="#popup1">Place Order</a>
+          </div>
+          <!-- modal displaying total. links to main page -->
+          <div class="modal" id="popup1">
+            <div class="twothirds rounded white padded">
+              <h4>Thank you for your purchase!</h4>
+              <p>Order Total: $${total}</p>
+              <div class="right">
+                <a class="close btn rounded" href="{{'default', 'index'}}">close</a>
+              </div>
+            </div>
+          </div>
+        </span>
+      </span>
+      <!-- toggle shop & cart -->
+      <span v-if="page=='shop'">
+        <span v-if="is_logged_in">
+          <div class="center">
+            <br></br>
+            <a class="btn rounded fa fa-shopping-cart" v-on:click="change_page"></a>
+          </div>
+        </span>
+        <div class="container compressible">
+          <br>
+          <div class="search_bar rounded">
+            <!-- input for search bar -->
+            <input v-model="search_string" v-on:input="do_search" placeholder="Search"></input>
+          </div>
+        </div>
+        <div v-if="product_list.length === 0">There are no products.</div>
+        <!-- main div for the whole product list -->
+        <div id="product_list">
+          <!-- for each product in product list -->
+          <div class="product_div" v-for="(product, index) in product_list">
+            <div class="container compressible">
+              <br>
+              <div class="product-block rounded">
+                <!-- display name, price description -->
+                <div class="product_name"><b>${product.product_name} &nbsp $${product.product_sales_price}</b></div>
+                <div class="product_description">${product.product_description}</div>
+                <!-- div for reviews -->
+                <div class="reviewers">
+                    <span v-if="!product._show_reviewers">
+                      <!-- display avg. star rating -->
+                      <span v-on:mouseout="stars_out(product._idx)">
+                        <span v-for="idx in star_indices">
+                            <i v-if="idx <= product._num_stars_display" class="fa fa-star" style="color:black"></i>
+                            <i v-if="idx > product._num_stars_display" class="fa fa-star-o"></i>
+                        </span>
+                      </span>
+                    </span>
+                    <!-- buttons for toggling reviews -->
+                    <span class="show_reviewers" v-on:click="!show_reviewers(product._idx)">
+                      <span class="toggle_review" v-on:click="review_click(product._idx)">
+                        <b v-if="!product._show" class="btn rounded">Reviews</b>
+                      </span>
+                    </span>
+                    <!-- input for adding product to cart -->
+                    <span v-if="is_logged_in">
+                      <input type="number" v-model="buy_list[index]" style="text-align:center; width:7%"/>
+                      <a class="btn rounded fa fa-cart-plus" v-on:click="inc_cart(product.id, index)" href="#popup2"> Add to Cart</a>
+                      <span v-if="added">
+                        <div class="modal" id="popup2">
+                          <div class="twothirds rounded white padded">
+                            <h4>Successfully added to cart</h4>
+                            <div class="right">
+                              <a class="close btn rounded" href="{{'default', 'index'}}">close</a>
+                            </div>
+                          </div>
+                        </div>
+                      </span>
+                    </span>
+                    <div class="container">
+                      <span v-if="product._show_reviewers">
+                        <!-- the user's specific rating -->
+                        <span v-if="is_logged_in">
+                          <div class="star_rating">
+                              <br><p><b>Your Star Rating:</b></p>
+                              <!-- the user's star rating -->
+                              <span v-on:mouseover="stars_over(product._idx, idx)"
+                                    v-on:click="set_stars(product._idx, idx)"
+                                    v-for="idx in star_indices">
+                                  <i v-if="idx <= product._the_rating" class="fa fa-star" style="color:black"></i>
+                                  <i v-if="idx > product._the_rating" class="fa fa-star-o"></i>
+                              </span>
+                              <br>
+                              <span v-if="product._has_reviewed">
+                                <!-- if the user has reviewed before, displays 'Edit Your Review' -->
+                                <br><p><b>Edit Your Review:</b></p>
+                              </span>
+                              <span v-if="!product._has_reviewed">
+                                <!-- if they haven't reviewed before -->
+                                <br><p><b>Add a New Review:</b></p>
+                              </span>
+                          </div>
+                          <div class="form">
+                            <span v-if="product._has_reviewed">
+                              <!-- if the user has reviewed before, displays the review for editing -->
+                              <textarea v-model="product._the_review" class="description"></textarea>
+                            </span>
+                            <span v-if="!product._has_reviewed">
+                              <!-- if they haven't reviewed before -->
+                              <textarea v-model="form_review" placeholder="Enter a review"></textarea>
+                            </span>
+                          </div>
+                          <div class="submit">
+                            <!-- submit button and saved checkmark -->
+                            <span v-on:click="add_review(product._idx, product.id)">
+                              <div class="container">
+                                <b class="btn rounded" v-on:click="do_call">Save</b>
+                                <b v-if="confirm" class="fa fa-check" style="color:green"> <i>Saved</i></b>
+                                <p><b>All Reviews:</b><p>
+                              </div>
+                            </span>
+                          </div>
+                        </span>
+                      </span>
+                    </div>
+                  <span v-if="product._show_reviewers">
+                    <!-- for each review in the list of reviews -->
+                    <span v-for="(reviewer, index) in product._reviewers">
+                      <div class="review-block">
+                        <!-- display the stars, not clickable -->
+                        <div class="star_rating" style="margin-top:-3%;margin-bottom:2%;">
+                          <span v-if="product._show_reviewers">
+                            <span v-for="idx in star_indices">
+                                <i v-if="idx <= product._star_ratings[index]" class="fa fa-star" style="color:black"></i>
+                                <i v-if="idx > product._star_ratings[index]" class="fa fa-star-o"></i>
+                            </span>
+                          </span>
+                        </div>
+                        <!-- display the review, then the name -->
+                        ${product._reviews[index]}<br></br>
+                        <p style="text-align:right; margin-bottom:-5%; margin-right:3%;">${reviewer}</p>
+                      </div>
+                    </span>
+                  </span>
+                </div>
+                <span class="show_reviewers" v-on:click="!show_reviewers(product._idx)">
+                  <span class="toggle_review" v-on:click="review_click(product._idx)">
+                    <b v-if="product._show" class="btn rounded">Close</b>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </span>
+    </div>
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>

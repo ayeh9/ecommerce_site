@@ -1,0 +1,107 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+  //Products
+  var get_prod_list_url = "{{=URL('api', 'get_prod_list')}}";
+
+  // Reviews
+  var get_rev_list_url = "{{=URL('api', 'get_rev_list')}}";
+  var add_rev_url = "{{=URL('api', 'add_review', user_signature=True)}}";
+</script>
+{{end}}
+
+<br>
+<br>
+
+<div class="main_content max900">
+
+  <div id="vue-div" class="display:none">
+    <!-- Your code goes here.  Remember to call $("#vue-div").show() once you get the data for the first time. -->
+    <input type="text" v-model="search_string" />
+
+    <div v-if="prod_list.length === 0">There are no products.</div>
+
+    <!-- We display the products. -->
+    <div id="prod_list centered">
+      <div class="prod_div" v-for="prod in prod_list"
+        v-if="prod.name.toLowerCase().startsWith(search_string.toLowerCase())">
+        <div class="lifted large olive spaced padded rounded">
+          <br>
+
+          <div class="name">${prod.name} - ${prod.price}</div>
+          <div class="descr">${prod.description}</div>
+
+          <span v-for="idx in star_indices">
+            <i v-if="idx <= prod.stars" class="fa fa-star"></i>
+            <i v-if="idx > prod.stars" class="fa fa-star-o"></i>
+          </span>
+
+          <br>
+
+          <span class="centered lifted" style="">
+            <h3>
+              <i id="check" v-if="check == prod._idx" class="fa fa-check"></i>
+            </h3>
+          </span>
+
+          <div id="add-rev" v-if="prod.reviews == 'Hide Reviews' && {{='false' if auth.user is None else 'true'}}">
+            <div class="container form_row">
+              <br>
+              Add/Edit your Review
+              <br>
+              <br>
+              <div class="form threequarters">
+                <textarea v-model="form_content" placeholder="Enter the content of your review"></textarea>
+              </div>
+            </div>
+            <br>
+            <div class="star_rating">
+              <span v-on:mouseout="stars_out(prod._idx)">
+                <span v-on:mouseover="stars_over(idx)" v-on:click="set_stars(idx)" v-for="idx in star_indices">
+                  <i v-if="idx <= temp_star" class="fa fa-star"></i>
+                  <i v-if="idx > temp_star" class="fa fa-star-o"></i>
+                </span>
+              </span>
+            </div>
+            <div class="container form_row">
+              <div class="quarter"></div>
+              <div class="threequarters">
+                <div class="submit">
+                  <button id="add-rev" v-on:click="add_review(prod._idx)">Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="attributes">
+            <div class="reviews bordered spaced padded">
+              <div class="btn" v-on:click="show_reviews(prod._idx)">${prod.reviews}</div>
+              <div v-for="rev in review_list">
+                <div v-if="rev.product == prod.id && prod.reviews == 'Hide Reviews'">
+                  <div class="gray spaced padded">
+                    <div class="usr">${rev.usr}</div>
+                    <span v-for="idx in star_indices">
+                      <i v-if="idx <= rev.num" class="fa fa-star"></i>
+                      <i v-if="idx > rev.num" class="fa fa-star-o"></i>
+                    </span>
+                    <div class="cont">${rev.cont}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>

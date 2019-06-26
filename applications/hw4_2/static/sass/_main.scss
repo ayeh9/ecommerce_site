@@ -1,0 +1,46 @@
+.colorful {
+  color: $clrHilight;
+}
+
+div.main_content {
+  padding: 16px;
+
+  div.form_row {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+
+  div.review_div {
+    margin: 4px;
+    border: 1px black solid;
+    background-color: $clrLight;
+    padding: 4px;
+    .review_title {
+      font-size: 100%;
+    }
+    .product_title {
+      font-size: 120%;
+    }
+  }
+
+  div.product_div {
+    margin: 4px;
+    border: 1px black solid;
+    background-color: $clrLight;
+    padding: 4px;
+    .product_title {
+      font-size: 150%;
+    }
+  }
+}
+
+input[type=text] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: black;
+  background-color: rgb(119, 202, 172);
+  color: black;
+}
+

@@ -1,0 +1,57 @@
+/* line 1, ../sass/_main.scss */
+.colorful {
+  color: #bb8833;
+}
+
+div.product_title {
+  font-size: 120%;
+  font-weight: bold;
+}
+
+div.product_container {
+  border-style: solid;
+  border-width: thin;
+  border-color: black;
+  background-color: lightgray;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  width: 500px;
+}
+
+div.stars{
+  border-style: solid;
+  border-width: thin;
+  border-color: black;
+  margin: 10px;
+  padding: 5px;
+  width: 40%;
+  background-color: whitesmoke;
+}
+
+div.reviews{
+  border-style: solid;
+  border-width: thin;
+  border-color: black;
+  margin: 10px;
+  padding: 5px;
+  background-color: whitesmoke;
+}
+
+span.review_button {
+  float:right;
+}
+
+div.review_container {
+  border-style: solid;
+  border-width: thin;
+  border-color: black;
+  background-color: whitesmoke;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+}

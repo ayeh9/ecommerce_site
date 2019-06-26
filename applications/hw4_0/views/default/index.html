@@ -1,0 +1,84 @@
+{{extend 'layout.html'}}
+
+{{block head}}
+<script src="{{=URL('static', 'js/vue.js')}}"></script>
+<script>
+    var my_url = "{{=URL('api', 'my_method')}}";
+    var get_product_list_url = "{{=URL('api', 'get_product_list')}}";
+    var get_review_list_url = "{{=URL('api', 'get_review_list')}}";
+    var get_star_list_url = "{{=URL('api', 'get_star_list')}}";
+    var add_review_url = "{{=URL('api', 'add_review')}}";
+    var search_url = "{{=URL('api', 'search')}}";
+</script>
+{{end}}
+
+<div class="main_content">
+    <div id="vue-div" class="display:none">
+        <div v-if="product_list.length === 0">There are no products.</div>
+
+        <h2 style="text-align:center;">Product List</h2>
+
+        <input type="text" v-model="search_string" v-on:input="do_search" />
+
+        <div id="product_list">
+            <div class="product_container" v-for="product in product_list">
+                <div class="product_title">${product.name}   $ ${product.price}</div>
+                <div class="products_description">${product.description}</div>
+
+
+                <div class="stars" v-show="details != product.id">
+
+                    <span v-for="idx in star_indices">
+                        <i v-if="idx <= get_avg(product.id)" class="fa fa-star"></i>
+                        <i v-if="idx > get_avg(product.id)" class="fa fa-star-o"></i>
+                    </span>
+                    <button v-on:click="detail_open(product.id)">Reviews</button>
+                </div>
+
+
+
+                <!-- Showing the product reviews -->
+                <div class="reviews" v-if="details == product.id">
+                    <!-- Adding a new review -->
+                    <div class="review_insert">
+                        Your review:
+
+                            <span v-on:click="star_set(idx)"
+                                  v-for="idx in star_indices">
+                                    <i v-if="idx <= star_hover" class="fa fa-star"></i>
+                                    <i v-if="idx > star_hover" class="fa fa-star-o"></i>
+                            </span>
+
+
+                        <textarea v-model="review_content" placeholder="Enter Review"></textarea><br>
+                        <div>
+                            <button id="add_review" v-on:click="add_review(product.id)">Save Review</button>
+                            <span v-if="check_mark" id="check" class="green fa fa-check"></span>
+                        </div>
+                    </div>
+
+                    <!-- List of reviews -->
+
+                    <div v-for="review in review_list">
+                        <div  class="review_container" v-show="product.id == review.product_id">
+                            <span v-for="idx in star_indices">
+                                <i v-if="idx <= review.review_star" class="fa fa-star"></i>
+                                <i v-if="idx > review.review_star" class="fa fa-star-o"></i>
+                            </span>
+                            <div class="review_content">${review.review_content}</div>
+                            <div class="review_user">${review.user_email}</div>
+                        </div>
+                    </div>
+
+                    <!-- Button to close the review list -->
+                    <div>
+                        <button v-on:click="detail_close()">Close Reviews</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="{{=URL('static', 'js/default_index.js')}}"></script>
